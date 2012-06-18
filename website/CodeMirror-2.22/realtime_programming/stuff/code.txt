@@ -1,0 +1,133 @@
+function tokenizeDemo(a)
+{
+  var s = "So how's the weather?" + "\n";
+  for (i = 0; i < a.length; i++) 
+  {
+    s = s + a[i] + "\n";
+  }  
+  if (s.length > 10) 
+  {
+    alert('you have a lot say!');
+  }
+}
+
+
+
+var key = "g";
+var array = "abcdefg";
+    
+  var low = 0;
+  var high = array.length - 1;
+  while(low <= high)
+  {
+    var mid = Math.floor((low + high)/2);
+    var value = array[mid];
+    if(value < key)
+    {
+      low = mid + 1;
+    }else if(value > key)
+    {
+      high = mid - 1;
+    }else 
+    {
+      mid=mid;
+    }
+  }
+  ret = -1;
+
+var key = "g";
+function binarySearch(key, array)
+{
+  var low = 0;
+  var high = array.length - 1;
+  while(low <= high)
+  {
+    var mid = Math.floor((low + high)/2);
+    var value = array[mid];
+    if(value < key)
+    {
+      low = mid + 1;
+    }else if(value > key)
+    {
+      high = mid - 1;
+    }else 
+    {
+      return mid;
+    }
+  }
+  return -1;
+}
+// hier wird die funtion mit einem string aufgerufen
+binarySearch(key, "abcdefgh");
+//print("\""+key + "\" is at index " +binarySearch(key, "abcdefgh")+"!");
+// print("\n\n\n"+tokenize(code));
+      <textarea id="code" name="code">
+function tokenizeDemo(a)
+{
+  var s = "So the ?" + "\n";
+  for (i = 0; i < a.length; i++) 
+  {
+    s = s + a[i] + "\n";
+  }  
+  if (s.length > 20) 
+  {
+    print(s+'you have a lot say!');
+  }else
+  {
+  
+    print(s+'you have NOOOOOT a lot say!');
+  }
+  var sdf = function()
+{
+
+  var a = Uint8Array(new ArrayBuffer(1000));
+  a[0] = 1;
+  print("a = "+a[0]+"\n");
+  a[0] = a[0] << 7;
+  print("a = "+a[0]+"\n");
+
+}()
+}
+// hier wird die funtion mit einem string aufgerufen
+tokenizeDemo("1234567abscd");
+      </textarea>
+      
+ArrayBuffer.prototype.toString = function(index)
+{
+  var decimal = this[index];
+  var binary = 0;
+  var col = 1;
+  while (decimal > col)
+  {
+    col = col * 2
+  }
+  col = col/2
+  var binary = 1
+  var remainder = decimal - col
+  do
+  {
+    repeatcol = col/2;
+    if (remainder >= col )
+    {
+      binary = binary & 1
+      remainder = remainder - col
+    }else
+    {
+      binary = binary & 0
+    }
+  } while (col == 1);
+  
+  
+  var str = "00000000";
+  var tmp = this[index];
+  return binary+"\n";
+}
+var a = new ArrayBuffer(1);
+
+a[0] = 1;
+
+print(a.toString(0));
+print("a = "+a[0]+"\n");
+a[0] = a[0] << 7;
+print("a = "+a[0]+"\n");
+      

@@ -1,0 +1,468 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Live PROgramming</title>
+    <link rel="icon" href="./favicon.ico" type="image/x-icon" />
+    <script src="../lib/codemirror.js"></script>
+    <script src="./libs/jquery.js"></script>
+    <script src="./libs/javascript.js"></script>
+    <script src="./libs/processing.js"></script>
+    <script src="./save.js"></script>
+    <script src="./libs/tokenizer.js"></script>
+    <script src="./libs/ariya-esprima-f67cb40/esprima.js"></script>
+    
+		<script type="text/javascript" src="./libs/js/jquery-1.7.1.min.js"></script>
+		<script type="text/javascript" src="./libs/js/jquery-ui-1.8.18.custom.min.js"></script>
+		
+		<link type="text/css" href="./libs/css/start/jquery-ui-1.8.18.custom.css" rel="stylesheet" />	
+    <link rel="stylesheet" href="../lib/codemirror.css">
+    <link rel="stylesheet" href="../theme/eclipse.css">
+    <link rel="stylesheet" href="./style.css">
+  </head>
+  <body onload="WebSocketTest();">RealtimeOrientedProgramming
+<a href="javascript:WebSocketTest()">Run WebSocket</a>
+    <script src="./astToCode.js"></script>
+  <!--<div class="ui-widget">
+    <div class="ui-state-highlight ui-corner-all" style="margin-top: 20px; padding: 0 .7em;"> 
+      <p><span class="ui-icon ui-icon-info" style="float: left; margin-right: .3em;"></span>
+      <strong>Error!</strong>TEST</p>
+    </div>
+  </div>-->
+    <table border="1">
+      <tr>
+        <th>Sourcecode</th>
+        <th>Result</th>
+      </tr>
+      <tr>
+        <td  style="height:30px" id="errorfield">successful compiled</td>
+        <td rowspan="2" >
+          <div id="tabs">
+            <ul>
+              <li><a href="#tabs-1" onClick="saveTabs(1)">AST</a></li>
+              <li><a href="#tabs-2" onClick="saveTabs(2)">CANVAS</a></li>
+              <li><a href="#tabs-3" onClick="saveTabs(3)">REALTIME_OUTPUT</a></li>
+              <li><a href="#tabs-4" onClick="saveTabs(4)">AST_TO_CODE</a></li>
+            </ul>
+            <div id="tabs-1"><textarea id="coderesultfield" name="coderesultfield"></textarea></div>
+            <div id="tabs-2"><canvas id="canvas1" style="width:100%; height:100%;">your browser is to lazy</canvas></div>
+            <div id="tabs-3"><textarea id="realtimeoutputfield" name="realtimeoutputfield"></textarea></div>
+            <div id="tabs-4"><textarea id="asttocodefield" name="asttocodefield"></textarea></div>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>
+<textarea id="sourcecodefield" name="sourcecodefield">
+var a = 0;
+for(var i = 0; i < 5; i++)
+{
+  a += i;
+  pln(a);
+}</textarea>          
+        </td>        
+      </tr>
+    </table>
+<div style="z-index: 10000; position: fixed; bottom: 0px; width: 100%; height: 15%; font-family: sans-serif; color: rgb(204, 204, 204); background-color: black;">
+  <div title="Double-click to toggle log minimization" style="height: 5px; margin-top: -5px; cursor: n-resize; background-color: darkgrey;"></div>
+  <div style="position: relative; font-family: monospace; overflow: auto; height: 100%; padding-top: 5px;">
+    <textarea id="consolefield" name="consolefield" style="border:0px;font-family: monospace; height: 120px; color: rgb(204, 204, 204); background-color: black; "></textarea>
+  </div>
+  <div title="Close Log" style="position: absolute; top: 5px; right: 20px; color: rgb(17, 17, 17); border-radius: 4px 4px 4px 4px; cursor: pointer; font-weight: normal; text-align: center; padding: 3px 5px; background-color: rgb(51, 51, 51); font-size: 12px;">?</div>
+</div>
+    <script  id="script">      
+
+function WebSocketTest()
+{
+  if ("WebSocket" in window)
+  {
+     //trace("WebSocket is supported by your Browser!");
+     // Let us open a web socket
+     websocket = "ws://localhost:9999/ws";
+          
+      if (window.WebSocket) {
+        ws = new WebSocket(websocket);
+      }
+      else if (window.MozWebSocket) {
+        ws = MozWebSocket(websocket);
+      }
+      else {
+        //console.log('WebSocket Not Supported');
+        return;
+      }
+
+
+     ws.onopen = function()
+     {
+        // Web Socket is connected, send data using send()
+        ws.send("Message to send");
+        //trace("Message is sent...");
+     };
+     ws.onmessage = function (evt) 
+     { 
+        var received_msg = evt.data;
+        editor.setValue(received_msg);
+        //trace("Message is received..." + received_msg);
+     };
+     ws.onclose = function()
+     { 
+        // websocket is closed.
+        //document.getElementById("textField").value = "Connection Failed...";
+        //trace("Connection is closed..."); 
+     };
+  }
+  else
+  {
+     // The browser doesn't support WebSocket
+    // trace("WebSocket NOT supported by your Browser!");
+  }
+}
+      try 
+      { 
+        sourcecodefield = document.getElementById("sourcecodefield");
+        coderesultfield = document.getElementById("coderesultfield");
+        errorfield = document.getElementById("errorfield");
+        consolefield = document.getElementById("consolefield");
+        realtimeoutputfield = document.getElementById("realtimeoutputfield");
+        asttocodefield = document.getElementById("asttocodefield");
+        
+       // var canvas = document.getElementById('CANVAS');
+        var canvas1 = document.getElementById("canvas1");
+        /*if(canvas.getContext)
+        {
+          var context = canvas.getContext('2d');
+        }*/
+        var pa = new Processing(canvas1);
+        pa.size(500, 400);
+        pa.draw = function()
+        {
+          pa.background(128,0,0);
+        }
+        pa.loop();
+
+        
+        
+        
+        if(cookie.get("sourceCode") != undefined)
+          sourcecodefield.value = cookie.get("sourceCode") ;
+          
+        $(function()
+        {
+          // Tabs
+          $('#tabs').tabs();
+          if(cookie.get("tab") != undefined)
+            $("#tabs").tabs('select', cookie.get("tab"));
+        });
+        function saveTabs(sel)      
+        {
+          cookie.set("tab",sel+"");  
+        }
+        
+        function p(x)
+        {
+          consolefield.value += x; 
+        }
+        function pln(x)
+        {
+          consolefield.value += x + "\n"; 
+        }
+        function printError(x)
+        {
+          errorfield.innerHTML = x; 
+          errorfield.style.backgroundColor="#FFDDDD";
+        }
+        function show(x)
+        {
+          coderesultfield.value  = x; 
+        }
+        function realtimeoutput(x)
+        {
+          realtimeoutputfield.value  += x; 
+        }
+        function astToCode(x)
+        {
+          asttocodefield.value  = x;
+        }
+        var lastLine = 0;
+        var errorInLine = 0;
+        var editor = CodeMirror.fromTextArea(sourcecodefield, {
+          onChange: function (n) { window.setTimeout("evalCode(editor.getValue())");},
+          lineNumbers: true,
+          matchBrackets: true,
+          onCursorActivity: function() 
+          {
+            var thisline = editor.getCursor().line;
+            if(lastLine != thisline)
+            {
+              highlight(thisline);
+            }
+            lastLine = thisline;       
+          }
+        });
+        
+        function highlight(thisline)
+        {
+          if(thisline == (errorInLine-1))
+          {
+            editor.setLineClass(hlLine, null);
+            //hlLine = editor.setLineClass(thisline, "errorline");
+          }else
+          {
+            if(lastLine != (errorInLine-1))
+            {
+              editor.setLineClass(hlLine, null);
+            }
+            hlLine = editor.setLineClass(thisline, "activeline");          
+          }      
+        }
+        function getClassName(line)
+        {
+          return editor.lineInfo(line).lineClass;
+        }
+        var  hlLine = editor.setLineClass(0, "activeline");
+        hlLine = editor.setLineClass(0, null);
+        function adjustRegexLiteral(key, value)
+        {
+              if (key === 'value' && value instanceof RegExp) 
+              {
+                  value = value.toString();
+              }
+              return value;
+        }
+        var ast;
+        function parseIt(code)
+        {
+          options = {
+              comment: false,
+              raw: false,
+              range: false,
+              loc: false
+          };
+          try {
+              result = esprima.parse(code, options);
+              ast = eval(result);
+              str = JSON.stringify(result, adjustRegexLiteral, 4);
+              astToCode(deparse(result));
+             // document.getElementById('code2').value = JSON.stringify(esprima.parse(code, { tokens : true }).tokens, adjustRegexLiteral, 4);
+          } catch (e) {
+              str = e.name + ': ' + e.message;
+          }
+          show(str)
+        }
+        
+        function evalCode(code)
+        {
+          coderesultfield.value = ""; 
+          consolefield.value = "";
+          var lineNumber = 0;
+          parseIt(code);
+          try 
+          {
+            var errorLine = editor.setLineClass(errorInLine-1, null);  
+            //context.fillStyle = "rgb(128, 128,128)";
+            //context.fillRect(0, 0, canvas.width, canvas.height);         
+            try{ eval("provokeErrorNOW");}catch(err){ lineNumber = err['lineNumber'];}
+            eval("theCode=function(){"+code+"}();");
+            consolefield.scrollTop = consolefield.scrollHeight;
+            realtimeoutputfield.value  =""; 
+            //eval(tokenize(code))
+            cookie.set("sourceCode", code);
+            errorInLine = 0;
+            printError("successfully evaluated");
+          }
+          catch(err)  
+          {
+            errorInLine = err['lineNumber'] - lineNumber;
+            txt = "Error in Line: " + errorInLine + "\nError Description: " + err.message + "\n\n"; 
+            //for (var i in e) alert(i + ' = ' + e[i]);
+            printError(txt);
+            var rrrr = editor.setLineClass(errorInLine-1, "errorline");  
+          }
+        }
+        // select first line
+        highlight(0);
+        lastLine = 0;
+        thisline=0;
+        errorInLine=345;
+        document.getElementsByTagName('textarea')[1].focus();
+        // fine
+        evalCode(sourcecodefield.value);
+      }
+      catch(err)  
+      {
+          document.getElementById("consolefield").value = "GDur caused an Error in line: "+err['lineNumber']+"\nErrormessage: " + err;
+      }
+    </script>
+<textarea id="ex1" hidden>
+
+processing.draw = function()
+{
+  // determine center and max clock arm length
+  var centerX = processing.width /2, centerY = processing.height / 2;
+  var maxArmLength = Math.min(centerX, centerY);
+  
+  function drawArm(position, lengthScale, weight) {      
+    processing.strokeWeight(weight );
+    processing.line(centerX, centerY, 
+      centerX + Math.sin(position * 2 * Math.PI) * lengthScale * maxArmLength,
+      centerY - Math.cos(position * 2 * Math.PI) * lengthScale * maxArmLength);
+  }
+
+  // erase background
+  processing.background(230);
+  var now = new Date();
+
+  // Moving hours arm by small increments
+  var hoursPosition = (now.getHours() % 12 + now.getMinutes() / 60) / 12;
+  drawArm(hoursPosition, 0.5, 5);
+
+  // Moving minutes arm by small increments
+  var minutesPosition = (now.getMinutes() + now.getSeconds() / 60) / 60;
+  drawArm(minutesPosition, 0.80, 3);
+
+  // Moving hour arm by second increments
+  var secondsPosition = now.getSeconds() / 60;
+  drawArm(secondsPosition, 0.90, 1);
+}
+
+//-----------------
+function Byte(number)
+{
+  if(number <= 255 && number >= 0)
+  {
+    if((typeof number) == "number")
+    {
+      //println("number");
+    }else
+    {
+      //println("string");
+    }
+    this.byte = Uint8Array(new ArrayBuffer(1));
+    this.byte = number;
+  }else
+  {
+    println("number must be in range of 0 to 255");
+  }
+}
+Byte.prototype.toString = function() 
+{
+  var tmp = parseInt(this.byte).toString(2);
+  var before = "";
+  for(var i = 0; i < (8 - tmp.length); i++)
+  {
+    before += "0"
+  }      
+  return "[" + before + tmp + "] = "+ this.byte;
+}
+Byte.prototype.shift = function(nach) 
+{
+  if(nach < 0)
+  {
+    return this.byte = this.byte >> (nach*-1);
+  }else
+  {
+    return this.byte = this.byte << nach;        
+  }
+}
+Byte.prototype.and = function(abyte) 
+{
+  return this.byte = this.byte & abyte.byte;
+}
+Byte.prototype.or = function(abyte) 
+{
+  return this.byte = this.byte | abyte.byte;
+}
+
+var a = new Byte(170);
+var b = new Byte(170);
+
+print("realtime byteshifting:\na = ");
+print(a);
+print("\nb = ");
+println(b);
+
+println("\na = a >> 1 // undynamischer string");
+a.shift(-1);
+print("\na = ");
+print(a);
+print("\nb = ");
+println(b);
+
+print("\na = a | b // undynamischer string");
+a.or(b);
+print("\na = ");
+print(a);
+</textarea>
+<textarea id="ex1" hidden>
+var x = function()
+{
+  var canvas = document.getElementById('testcanvas1');
+  if(canvas.getContext)
+  {
+    var context = canvas.getContext('2d');
+    
+    // hintergrund leicht grau zeichnen
+    context.fillStyle = "rgb(244, 244, 244)";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    // dota-red box
+    context.fillStyle = "rgb(145, 0, 25)";
+    context.fillRect(24, 24, (canvas.width+24)/2, canvas.height-48);
+
+    // epic-blue box
+    context.fillStyle = "rgb(40, 110, 170)";
+    context.fillRect((canvas.width)/2, 24, canvas.width/2-24, canvas.height-48);
+  }
+}();
+</textarea>
+<textarea id="ex2" hidden>
+var a = 0;
+for(var i = 0; i < 5; i++)
+{
+  a ++;
+}
+
+
+var x=0;
+var max=100 
+    
+    
+function stepIntoBody(obj)
+{
+  x++
+  if(x > max)    
+  {
+    alert("to much rekursion")
+    return;
+  }
+  pln(x + "-------------------------------------")
+}
+function stepInto(obj)
+{
+  x++
+  if(x > max)    
+  {
+    alert("to much rekursion")
+    return;
+  }
+  pln(x + "-------------------------------------")
+  for (var i=0; i < obj.length;i++)
+  {
+    tmp = obj[i];
+    if(tmp.type == "ForStatement")
+    {
+      stepIntoForStatement(tmp.init[0])
+    }else if(tmp.type == "VariableDeclaration")
+    {
+      pln(tmp.declarations[0].id.name +" = "+ eval(tmp.declarations[0].id.name));
+    }else if(tmp.type == "UpdateExpression")
+    {
+      pln(" = ");
+    }
+   // pln(tmp.type)
+  }  
+}
+var bdy =  ast.body 
+stepInto(bdy)
+</textarea>   
+  </body>
+</html>

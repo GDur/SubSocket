@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+		<title>jQuery UI Example Page</title>
+		<link type="text/css" href="css/start/jquery-ui-1.8.18.custom.css" rel="stylesheet" />	
+		<script type="text/javascript" src="js/jquery-1.7.1.min.js"></script>
+		<script type="text/javascript" src="js/jquery-ui-1.8.18.custom.min.js"></script>
+		<script type="text/javascript" src="../save.js"></script>
+		<meta charset="utf-8">
+	
+	<style>
+	#dialog label, #dialog input { display:block; }
+	#dialog label { margin-top: 0.5em; }
+	#dialog input, #dialog textarea { width: 95%; }
+	#tabs { margin-top: 1em; }
+	#tabs li .ui-icon-close { float: left; margin: 0em 0.2em 0 0; cursor: pointer; }
+	#add_tab { cursor: pointer; }
+	</style>
+	<script>
+	$(function() {
+
+    /*cookie.setJson("scripts", [
+        {"name": "binarySearch", "sourcecode": "function a(){\"}"},
+        {"name": "name2", "sourcecode": "test"}
+    ]);*/
+    
+		scripts = cookie.getJson("scripts");
+		/*
+		test = scripts[0].name
+		alert(test)
+		for(var i = 0; i <scripts.length; i++)
+		{
+		
+		}*/
+		
+			
+		var $tab_title_input = $( "#tab_title");
+		var $tab_content_input; //= cookie.get("binarySearch");
+		var tab_counter = 2;
+
+		// tabs init with a custom tab template and an "add" callback filling in the content
+		var $tabs = $( "#tabs").tabs({
+			tabTemplate: "<li><a href='#{href}'>#{label}</a> <span class='ui-icon ui-icon-close'>Remove Tab</span></li>",
+			add: function( event, ui ) {
+				$( ui.panel ).append( "<textarea>" + $tab_content_input + "</textarea>" );
+			}
+		});
+		function readScripts()
+		{
+      for(var i = 0; i <scripts.length; i++)
+      {
+        $tab_content_input = scripts[i].sourcecode;
+        $tabs.tabs( "add", "#tabs-" + tab_counter, scripts[i].name ,$tabs.tabs( "length" )-1);
+        tab_counter++;
+      }		
+		}
+		readScripts();
+    function save()
+    {
+        alert($tabs.tabs('option', 'selected')+"");
+    }
+
+		// modal dialog init: custom buttons and a "close" callback reseting the form inside
+		$dialog = $( "#dialog" ).dialog({		
+			autoOpen: false,
+			modal: true,
+			buttons: {
+				Add: function() {
+				
+					addTab();
+					$( this ).dialog( "close" );
+				},
+				Cancel: function() {
+					$( this ).dialog( "close" );
+				}
+			},
+			open: function() {
+				$tab_title_input.focus();
+			},
+			close: function() {
+				$form[ 0 ].reset();
+			}
+		});
+
+		// form: calls addTab function on submit and closes the dialog
+		var $form = $( "form", $dialog ).submit(function() {
+			addTab();
+			$dialog.dialog( "close" );
+			return false;
+		});
+
+		// actual addTab function: adds new tab using the title input from the form above
+		function addTab() {
+			var tab_title = $tab_title_input.val() || "Script " + tab_counter;
+			
+      scripts.push({"name":tab_title,"sourcecode":""})
+      cookie.setJson("scripts", scripts);
+			$tabs.tabs( "add", "#tabs-" + tab_counter, tab_title ,$tabs.tabs( "length" )-1);
+			$tabs.tabs( "select", $tabs.tabs( "length" )-2);
+			tab_counter++;
+		}
+
+		// addTab button: just opens the dialog
+		$( "#add_tab" )
+			.button()
+			.click(function() {
+				$dialog.dialog( "open" );
+			});
+    $( "#newTab" ).click(function() {
+      $dialog.dialog( 'open' );
+    });
+
+		// close icon: removing the tab on click
+		// note: closable tabs gonna be an option in the future - see http://dev.jqueryui.com/ticket/3924
+		$( "#tabs span.ui-icon-close" ).live( "click", function() {
+			var index = $( "li", $tabs ).index( $( this ).parent() );
+			$tabs.tabs( "remove", index );
+		});
+	});
+	</script>
+
+
+
+<div class="demo">
+<input type="button" value="save">
+	<div id="dialog" title="New File" onlcick="save()">
+		<form>
+			<fieldset class="ui-helper-reset">
+				<label for="tab_title">FileName</label>
+				<input type="text" name="tab_title" id="tab_title" value="" class="ui-widget-content ui-corner-all" />
+			</fieldset>
+		</form>
+	</div>
+
+	<div id="tabs">
+		<ul>
+			<li><a href="#tabs-1" id="newTab" >+</a></li>
+		</ul>
+		<div id="tabs-1">
+			<p></p>
+		</div>
+	</div>
+
+</div><!-- End demo -->
+
+
+
+<div class="demo-description">
+<p>Simple tabs adding and removing.</p>
+</div><!-- End demo-description -->
+	</body>
+</html>
+
+
